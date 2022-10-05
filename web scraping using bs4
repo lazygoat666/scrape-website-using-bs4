@@ -1,0 +1,50 @@
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+def extract(page):
+    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'}
+    url = (f'https://www.glassdoor.ca/Job/toronto-digital-marketing-job-jobs-SRCH_IL.0,7_IC2281069_KO8,29_IP{page}.htm?includeNoSalaryJobs=true&pgc=AB4AAoEAPAAAAAAAAAAAAAAAAeX5sCoAeAEBARgCYZLezPZajRTvzhsG5ivuyHBBmkf%2BWYoGMytpghHuVnoi7YHEDSGpnXNAlf2fdX4edkSpUWDnW49BSDT7ZtEODcyopievlRtIxY%2BPGTPygMcwCnsd5N63rnYRpjLgk5ApapsUThds1v3Y4PaBJu3MjrSCtAAA')
+    r = requests.get(url,headers=headers)
+    soup=BeautifulSoup(r.content,'html.parser')
+    #return r.status_code
+    return soup
+
+joblist = []
+
+def transform(soup):
+   divs = soup.find_all('li',class_='react-job-listing')
+   for item in divs:
+        company = item.find('div',class_='d-flex justify-content-between align-items-start').text.strip()
+        position = item.find('a',class_ = 'eigr9kq1').text.strip()
+        try:
+            salary = item.find('span',class_ = 'e1wijj240').text.strip()
+        except:
+            salary = ''
+        city = item.find('div',class_ = 'e1rrn5ka2').text.strip()
+        postdate=item.find('div',class_='css-17n8uzw').text.strip()
+        star = item.find('div',class_ = 'e1rrn5ka1').text.strip()
+        collectday = datetime.today().strftime('%Y-%m-%d')
+        job = {
+            'company':company,
+            'position':position,
+            'salary':salary,
+            'city':city,
+            'postdate':postdate,
+            'star':star,
+            'collectday':collectday
+        }
+        joblist.append(job)
+   return
+
+
+for i in range(0,3,1):
+    print(f'Getting page,{i}')
+    c=extract(0)
+    transform(c)
+
+
+df=pd.DataFrame(joblist)
+
+df.to_csv('E:/Data science work experience project/glassdoor3.csv')
